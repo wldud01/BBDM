@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "bbdm-main"
+version = "0.1.0"
+description = ""
+authors = ["wldud01 <yunjiyeong0106@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+tqdm = "^4.67.1"
+torch = "^2.7.0"
+torchvision = "^0.22.0"
+numpy = "^2.2.6"
+einops = "^0.8.1"
+omegaconf = "^2.3.0"
+opencv-python = "^4.11.0.86"
+pytorch-fid = "^0.3.0"
+lpips = "^0.1.4"
+albumentations = "^2.0.8"
+requests = "^2.32.3"
+pytorch-lightning = "^2.5.1.post0"
+tensorboard = "^2.19.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
