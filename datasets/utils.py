@@ -1,7 +1,7 @@
 import os
 
 # 모든 이미지의 경로를 반환 
-def get_image_paths_from_dir(fdir):
+def get_image_paths_from_dir(fdir): # fdir: str, 예시: 'datasets_path/PSHC/BBDM_input_split/train/NECT'
     flist = os.listdir(fdir)
     flist.sort()
 

@@ -98,7 +98,7 @@ def extract_into_tensor(a, t, x_shape):
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))
 
-
+# ok
 def checkpoint(func, inputs, params, flag):
     """
     Evaluate a function without caching intermediate activations, allowing for
@@ -147,7 +147,7 @@ class CheckpointFunction(torch.autograd.Function):
         del output_tensors
         return (None, None) + input_grads
 
-
+#ok
 def timestep_embedding(timesteps, dim, max_period=10000, repeat_only=False):
     """
     Create sinusoidal timestep embeddings.
@@ -170,7 +170,7 @@ def timestep_embedding(timesteps, dim, max_period=10000, repeat_only=False):
         embedding = repeat(timesteps, 'b -> b d', d=dim)
     return embedding
 
-
+# ok
 def zero_module(module):
     """
     Zero out the parameters of a module and return it.
@@ -195,7 +195,7 @@ def mean_flat(tensor):
     """
     return tensor.mean(dim=list(range(1, len(tensor.shape))))
 
-
+# ok
 def normalization(channels):
     """
     Make a standard normalization layer.
@@ -214,7 +214,7 @@ class SiLU(nn.Module):
 class GroupNorm32(nn.GroupNorm):
     def forward(self, x):
         return super().forward(x.float()).type(x.dtype)
-
+#ok
 def conv_nd(dims, *args, **kwargs):
     """
     Create a 1D, 2D, or 3D convolution module.
@@ -227,14 +227,14 @@ def conv_nd(dims, *args, **kwargs):
         return nn.Conv3d(*args, **kwargs)
     raise ValueError(f"unsupported dimensions: {dims}")
 
-
+#ok
 def linear(*args, **kwargs):
     """
     Create a linear module.
     """
     return nn.Linear(*args, **kwargs)
 
-
+#ok
 def avg_pool_nd(dims, *args, **kwargs):
     """
     Create a 1D, 2D, or 3D average pooling module.

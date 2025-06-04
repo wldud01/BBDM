@@ -5,14 +5,14 @@ import omegaconf.dictconfig
 from Register import Registers
 from runners.DiffusionBasedModelRunners.BBDMRunner import BBDMRunner
 
-
+# config 파일 내용 dict로 변환, 예시: key('runner'), value('BBDMRunner') 형태로 변환
 def dict2namespace(config):
     namespace = argparse.Namespace()
     for key, value in config.items():
         if isinstance(value, dict) or isinstance(value, omegaconf.dictconfig.DictConfig):
             new_value = dict2namespace(value)
         else:
-            new_value = value
+            new_value = value   # BBDMRunner
         setattr(namespace, key, new_value)
     return namespace
 
@@ -24,6 +24,7 @@ def namespace2dict(config):
             conf_dict[key] = namespace2dict(value)
         else:
             conf_dict[key] = value
+    print(" ")
     return conf_dict
 
 
@@ -40,7 +41,7 @@ def instantiate_from_config(config):
         raise KeyError("Expected key `target` to instantiate.")
     return get_obj_from_str(config["target"])(**config.get("params", dict()))
 
-
+# default: runner -> BBDMRunner
 def get_runner(runner_name, config):
     runner = Registers.runners[runner_name](config)
     return runner

@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from PIL import Image
 from Register import Registers
 from model.BrownianBridge.BrownianBridgeModel import BrownianBridgeModel
-from model.BrownianBridge.LatentBrownianBridgeModel import LatentBrownianBridgeModel
+#from model.BrownianBridge.LatentBrownianBridgeModel import LatentBrownianBridgeModel
 from runners.DiffusionBasedModelRunners.DiffusionBaseRunner import DiffusionBaseRunner
 from runners.utils import weights_init, get_optimizer, get_dataset, make_dir, get_image_grid, save_single_image
 from tqdm.autonotebook import tqdm
@@ -21,8 +21,8 @@ class BBDMRunner(DiffusionBaseRunner):
     def initialize_model(self, config):
         if config.model.model_type == "BBDM":
             bbdmnet = BrownianBridgeModel(config.model).to(config.training.device[0])
-        elif config.model.model_type == "LBBDM":
-            bbdmnet = LatentBrownianBridgeModel(config.model).to(config.training.device[0])
+        #elif config.model.model_type == "LBBDM":
+        #    bbdmnet = LatentBrownianBridgeModel(config.model).to(config.training.device[0])
         else:
             raise NotImplementedError
         bbdmnet.apply(weights_init)
@@ -69,97 +69,9 @@ class BBDMRunner(DiffusionBaseRunner):
     @torch.no_grad()
     def get_checkpoint_states(self, stage='epoch_end'):
         model_states, optimizer_scheduler_states = super().get_checkpoint_states()
-        if self.config.model.normalize_latent:
-            if self.config.training.use_DDP:
-                model_states['ori_latent_mean'] = self.net.module.ori_latent_mean
-                model_states['ori_latent_std'] = self.net.module.ori_latent_std
-                model_states['cond_latent_mean'] = self.net.module.cond_latent_mean
-                model_states['cond_latent_std'] = self.net.module.cond_latent_std
-            else:
-                model_states['ori_latent_mean'] = self.net.ori_latent_mean
-                model_states['ori_latent_std'] = self.net.ori_latent_std
-                model_states['cond_latent_mean'] = self.net.cond_latent_mean
-                model_states['cond_latent_std'] = self.net.cond_latent_std
+
         return model_states, optimizer_scheduler_states
 
-    def get_latent_mean_std(self):
-        train_dataset, val_dataset, test_dataset = get_dataset(self.config.data)
-        train_loader = DataLoader(train_dataset,
-                                  batch_size=self.config.data.train.batch_size,
-                                  shuffle=True,
-                                  num_workers=8,
-                                  drop_last=True)
-
-        total_ori_mean = None
-        total_ori_var = None
-        total_cond_mean = None
-        total_cond_var = None
-        max_batch_num = 30000 // self.config.data.train.batch_size
-
-        def calc_mean(batch, total_ori_mean=None, total_cond_mean=None):
-            (x, x_name), (x_cond, x_cond_name) = batch
-            x = x.to(self.config.training.device[0])
-            x_cond = x_cond.to(self.config.training.device[0])
-
-            x_latent = self.net.encode(x, cond=False, normalize=False)
-            x_cond_latent = self.net.encode(x_cond, cond=True, normalize=False)
-            x_mean = x_latent.mean(axis=[0, 2, 3], keepdim=True)
-            total_ori_mean = x_mean if total_ori_mean is None else x_mean + total_ori_mean
-
-            x_cond_mean = x_cond_latent.mean(axis=[0, 2, 3], keepdim=True)
-            total_cond_mean = x_cond_mean if total_cond_mean is None else x_cond_mean + total_cond_mean
-            return total_ori_mean, total_cond_mean
-
-        def calc_var(batch, ori_latent_mean=None, cond_latent_mean=None, total_ori_var=None, total_cond_var=None):
-            (x, x_name), (x_cond, x_cond_name) = batch
-            x = x.to(self.config.training.device[0])
-            x_cond = x_cond.to(self.config.training.device[0])
-
-            x_latent = self.net.encode(x, cond=False, normalize=False)
-            x_cond_latent = self.net.encode(x_cond, cond=True, normalize=False)
-            x_var = ((x_latent - ori_latent_mean) ** 2).mean(axis=[0, 2, 3], keepdim=True)
-            total_ori_var = x_var if total_ori_var is None else x_var + total_ori_var
-
-            x_cond_var = ((x_cond_latent - cond_latent_mean) ** 2).mean(axis=[0, 2, 3], keepdim=True)
-            total_cond_var = x_cond_var if total_cond_var is None else x_cond_var + total_cond_var
-            return total_ori_var, total_cond_var
-
-        self.logger(f"start calculating latent mean")
-        batch_count = 0
-        for train_batch in tqdm(train_loader, total=len(train_loader), smoothing=0.01):
-            # if batch_count >= max_batch_num:
-            #     break
-            batch_count += 1
-            total_ori_mean, total_cond_mean = calc_mean(train_batch, total_ori_mean, total_cond_mean)
-
-        ori_latent_mean = total_ori_mean / batch_count
-        self.net.ori_latent_mean = ori_latent_mean
-
-        cond_latent_mean = total_cond_mean / batch_count
-        self.net.cond_latent_mean = cond_latent_mean
-
-        self.logger(f"start calculating latent std")
-        batch_count = 0
-        for train_batch in tqdm(train_loader, total=len(train_loader), smoothing=0.01):
-            # if batch_count >= max_batch_num:
-            #     break
-            batch_count += 1
-            total_ori_var, total_cond_var = calc_var(train_batch,
-                                                     ori_latent_mean=ori_latent_mean,
-                                                     cond_latent_mean=cond_latent_mean,
-                                                     total_ori_var=total_ori_var,
-                                                     total_cond_var=total_cond_var)
-            # break
-
-        ori_latent_var = total_ori_var / batch_count
-        cond_latent_var = total_cond_var / batch_count
-
-        self.net.ori_latent_std = torch.sqrt(ori_latent_var)
-        self.net.cond_latent_std = torch.sqrt(cond_latent_var)
-        self.logger(self.net.ori_latent_mean)
-        self.logger(self.net.ori_latent_std)
-        self.logger(self.net.cond_latent_mean)
-        self.logger(self.net.cond_latent_std)
 
     def loss_fn(self, net, batch, epoch, step, opt_idx=0, stage='train', write=True):
         (x, x_name), (x_cond, x_cond_name) = batch

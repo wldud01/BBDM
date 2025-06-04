@@ -36,7 +36,7 @@ class BaseRunner(ABC):
         else:
             self.global_step = 0
 
-        self.GAN_buffer = {}  # GAN buffer for Generative Adversarial Network
+        #self.GAN_buffer = {}  # GAN buffer for Generative Adversarial Network
         self.topk_checkpoints = {}  # Top K checkpoints
 
         # set log and save destination
@@ -342,6 +342,8 @@ class BaseRunner(ABC):
         train_sampler = None
         val_sampler = None
         test_sampler = None
+
+        # 분산 처리 관련 (사용 x)
         if self.config.training.use_DDP:
             train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
             val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
@@ -361,7 +363,7 @@ class BaseRunner(ABC):
                                      num_workers=8,
                                      drop_last=True,
                                      sampler=test_sampler)
-        else:
+        else:   # 단일 GPU 처리
             train_loader = DataLoader(train_dataset,
                                       batch_size=self.config.data.train.batch_size,
                                       shuffle=self.config.data.train.shuffle,
@@ -392,7 +394,7 @@ class BaseRunner(ABC):
                     train_sampler.set_epoch(epoch)
                     val_sampler.set_epoch(epoch)
 
-                pbar = tqdm(train_loader, total=len(train_loader), smoothing=0.01, disable=not self.is_main_process)
+                pbar = tqdm(train_loader, total=len(train_loader), smoothing=0.01, disable= False) # disable=not self.is_main_process
                 self.global_epoch = epoch
                 start_time = time.time()
                 for train_batch in pbar:

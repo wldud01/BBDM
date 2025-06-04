@@ -23,7 +23,7 @@ def parse_args_and_config():
     parser.add_argument('--sample_at_start', action='store_true', default=False, help='sample at start(for debug)')
     parser.add_argument('--save_top', action='store_true', default=False, help="save top loss checkpoint")
 
-    parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids, 0,1,2,3 cpu=-1')
+    parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids, 0,1,2,3 cpu=-1')
     parser.add_argument('--port', type=str, default='12355', help='DDP master port')
 
     parser.add_argument('--resume_model', type=str, default=None, help='model checkpoint')
@@ -64,7 +64,7 @@ def set_random_seed(SEED=1234):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-
+# GPI 분산 처리 관련 코드 (사용 x)
 def DDP_run_fn(rank, world_size, config):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = config.args.port
@@ -96,7 +96,7 @@ def CPU_singleGPU_launcher(config):
             runner.test()
     return
 
-
+# 분산 처리 관련 코드
 def DDP_launcher(world_size, run_fn, config):
     mp.spawn(run_fn,
              args=(world_size, copy.deepcopy(config)),
@@ -113,12 +113,14 @@ def main():
         nconfig.training.use_DDP = False
         nconfig.training.device = [torch.device("cpu")]
         CPU_singleGPU_launcher(nconfig)
-    else:
+    else:   # Use GPU
         gpu_list = gpu_ids.split(",")
+        # 분산 처리를 사용하는 경우
         if len(gpu_list) > 1:
             os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids
             nconfig.training.use_DDP = True
             DDP_launcher(world_size=len(gpu_list), run_fn=DDP_run_fn, config=nconfig)
+        # 단일 GPU를 사용하는 경우
         else:
             nconfig.training.use_DDP = False
             nconfig.training.device = [torch.device(f"cuda:{gpu_list[0]}")]

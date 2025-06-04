@@ -9,7 +9,7 @@ import numpy as np
 
 from model.utils import extract, default
 from model.BrownianBridge.base.modules.diffusionmodules.openaimodel import UNetModel
-from model.BrownianBridge.base.modules.encoders.modules import SpatialRescaler
+#from model.BrownianBridge.base.modules.encoders.modules import SpatialRescaler
 
 
 class BrownianBridgeModel(nn.Module):

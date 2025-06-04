@@ -49,6 +49,6 @@ class CustomCTTranslationDataset(Dataset):
         return len(self.nect_dataset)
 
     def __getitem__(self, idx):
-        target_img, name = self.cect_dataset[idx]  # Target: CECT
-        cond_img, _ = self.nect_dataset[idx]       # Condition: NECT
+        target_img, name = self.cect_dataset[idx]  # Target: CECT, shape (C, H, W)
+        cond_img, _ = self.nect_dataset[idx]       # Condition: NECT, shape (C, H, W)
         return (target_img, name), (cond_img, name)
