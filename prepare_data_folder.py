@@ -28,6 +28,7 @@ def convert_to_bbdm_structure_with_split(src_root, dst_root, val_ratio=0.1, test
     print(f" 총 {len(pairs)} 쌍의 이미지가 발견되었습니다.")
 
     # 셔플 후 split
+    random.seed(42) 
     random.shuffle(pairs)
     n_total = len(pairs)
     n_val = int(n_total * val_ratio)
