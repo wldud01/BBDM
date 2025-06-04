@@ -1,98 +1,99 @@
 # Brownian Bridge Diffusion Model Template(Pixel Space)
-runner: "BBDMRunner"
-training:
-  n_epochs: 200
-  n_steps: 400000
-  save_interval: 20
-  sample_interval: 2
-  validation_interval: 20
-  accumulate_grad_batches: 2
+runner: "BBDMRunner"  # 학습/평가 로직 담당
 
-testing:
-  clip_denoised: True
-  sample_num: 5
+training: # 학습 관련 설정
+  n_epochs: 200   # 최대 학습 epoch 수
+  n_steps: 400000 # 최대 학습 step 수
+  save_interval: 20 # 몇 epoch마다 모델을 저장할지
+  sample_interval: 2  # 샘플링 저장 주기 (epoch 단위)
+  validation_interval: 20 # 검증 수행 주기 (epoch 단위)
+  accumulate_grad_batches: 2  # 메모리 절약을 위한 gradient accumulation step 수
 
-data:
-  dataset_name: 'custom_ct_translation'  # 'dataset_name'
-  dataset_type: 'custom_ct_translation'
+testing:  # 평가 관련 설정
+  clip_denoised: True # denoising된 이미지가 -1 ~ 1 사이로 clip할지 여부
+  sample_num: 5 # 샘플링 시 생성할 이미지 개수
+
+data: # 데이터 관련 설정정
+  dataset_name: 'custom_ct_translation' # 'dataset_name'
+  dataset_type: 'custom_ct_translation' # Register에 등록된 데이터셋 클래스 이름
   dataset_config:
-    dataset_path: '/mnt/c/Users/0106y/PSHC/BBDM_input_split'
-    image_size: 64 # default 256
-    channels: 1 # default 3
-    to_normal: True
-    flip: False
-  train:
+    dataset_path: '/mnt/c/Users/0106y/PSHC/BBDM_input_split'  # train/val/test 데이터셋이 저장된 경로
+    image_size: 64 # default 256, 이미지 크기
+    channels: 1 # default 3, 이미지 channels 수
+    to_normal: True # -1 ~ 1로 정규화할지 여부
+    flip: False # 수평 플립 여부 (Train 시 aumentation)
+  train:  # 학습용 데이터셋 설정
     batch_size: 2 # default 8
     shuffle: True
-  val:
+  val:  # 검증용 데이터셋 설정
     batch_size: 2
     shuffle: True
-  test:
+  test: # 평가용 데이터셋 설정
     batch_size: 2
     # shuffle: False
 
-model:
+model:  # 모델 관련 설정정
   model_name: "BrownianBridge" # part of result path
-  model_type: "BBDM" # specify a module
-  latent_before_quant_conv: False
-  normalize_latent: False
+  model_type: "BBDM" # 사용할 모델 타입 (해당 이름으로 class가 등록되어 있어야 함)
+  latent_before_quant_conv: False # Latent BBDM 용, 현재 사용 안함
+  normalize_latent: False  # Latent를 정규화할지 여부
   only_load_latent_mean_std: False
   # model_load_path:  # model checkpoint path
   # optim_sche_load_path:  # optimizer scheduler checkpoint path
 
-  EMA:
-    use_ema: True
-    ema_decay: 0.995
-    update_ema_interval: 8 # step
-    start_ema_step: 30000
+  EMA:  # Exponential Moving Average 관련 설정
+    use_ema: True # EMA 사용 여부
+    ema_decay: 0.995  # EMA decay 비율
+    update_ema_interval: 8 # 몇 step마다 EMA를 업데이트할지
+    start_ema_step: 30000 # 해당 step부터 EMA 적용
 
-  CondStageParams:
-    n_stages: 2
-    in_channels: 2
-    out_channels: 1
+  CondStageParams:  # condition stage 관련 설정
+    n_stages: 2 # condition과 target을 다루는 두 개의 stage를 사용
+    in_channels: 2 # condition (NECT + noise -> 2 channels)
+    out_channels: 1 # target (CECT -> 1 channel)
 
-  BB:
-    optimizer:
+  BB: # Brownian Bridge 관련 설정
+    optimizer:  # optimizer
       weight_decay: 0.000
       optimizer: 'Adam'
       lr: 1.e-4
       beta1: 0.9
 
-    lr_scheduler:
+    lr_scheduler: # learning rate scheduler
       factor: 0.5
       patience: 3000
       threshold: 0.0001
       cooldown: 3000
       min_lr: 5.e-7
 
-    params:
-      mt_type: 'linear' # options {'linear', 'sin'}
+    params: # Brownian Bridge 관련 파라미터
+      mt_type: 'linear' # options {'linear', 'sin'}, 시간 스케일링 방식식
       objective: 'grad' # options {'grad', 'noise', 'ysubx'}
-      loss_type: 'l1' # options {'l1', 'l2'}
+      loss_type: 'l1' # options {'l1', 'l2'}  # 손실 함수 종류류
 
-      skip_sample: True
+      skip_sample: True # 샘플링 시 중간 단계 생략 여부 결정
       sample_type: 'linear' # options {"linear", "sin"}
-      sample_step: 200
+      sample_step: 200  # 샘플링 시 step 수
 
-      num_timesteps: 1000 # timesteps
+      num_timesteps: 1000 # Diffusion step 수
       eta: 1.0 # DDIM reverse process eta
       max_var: 1.0 # maximum variance
 
-      UNetParams:
-        image_size: 64
-        in_channels: 2   # source + condition, default 6(RGB + RGB)
-        model_channels: 128
+      UNetParams: # UNet 관련 설정
+        image_size: 64  # 입력 이미지 크기 
+        in_channels: 1   # source, default 6(RGB + RGB)
+        model_channels: 128 # UNet의 기본 채널 수
         out_channels: 1   # target, default 3(RGB)
-        num_res_blocks: 2
-        attention_resolutions: !!python/tuple
+        num_res_blocks: 2 # 각 UNet block의 residual block 수
+        attention_resolutions: !!python/tuple # attention을 적용할 이미지 크기
           - 32
           - 16
           - 8
-        channel_mult: !!python/tuple
+        channel_mult: !!python/tuple # 단계별 채널 수 증가 비율율
           - 1
           - 4
           - 8
-        conv_resample: True
+        conv_resample: True # 업/다운 샘플링 시 conv 사용 여부
         dims: 2
         num_heads: 8
         num_head_channels: 64
@@ -100,4 +101,4 @@ model:
         resblock_updown: True
         use_spatial_transformer: False
         context_dim:
-        condition_key: "SpatialRescaler" # options {"SpatialRescaler", "first_stage", "nocond"}
+        condition_key: "nocond" # options {"SpatialRescaler", "first_stage", "nocond"}

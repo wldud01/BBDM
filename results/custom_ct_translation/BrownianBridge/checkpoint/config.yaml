@@ -53,12 +53,12 @@ model: !!python/object:argparse.Namespace
         - 1
         - 4
         - 8
-        condition_key: SpatialRescaler
+        condition_key: nocond
         context_dim: null
         conv_resample: true
         dims: 2
         image_size: 64
-        in_channels: 2
+        in_channels: 1
         model_channels: 128
         num_head_channels: 64
         num_heads: 8
