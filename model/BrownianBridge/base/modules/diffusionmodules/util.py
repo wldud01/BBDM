@@ -17,7 +17,7 @@ from einops import repeat
 
 from model.BrownianBridge.base.util import instantiate_from_config
 
-
+# beta schedules
 def make_beta_schedule(schedule, n_timestep, linear_start=1e-4, linear_end=2e-2, cosine_s=8e-3):
     if schedule == "linear":
         betas = (
@@ -42,7 +42,7 @@ def make_beta_schedule(schedule, n_timestep, linear_start=1e-4, linear_end=2e-2,
         raise ValueError(f"schedule '{schedule}' unknown.")
     return betas.numpy()
 
-
+# Regerence: https://arxiv.org/pdf/2010.02502 (DDIM paper)
 def make_ddim_timesteps(ddim_discr_method, num_ddim_timesteps, num_ddpm_timesteps, verbose=True):
     if ddim_discr_method == 'uniform':
         c = num_ddpm_timesteps // num_ddim_timesteps
@@ -70,7 +70,7 @@ def make_ddim_sampling_parameters(alphacums, ddim_timesteps, eta, verbose=True):
     if verbose:
         print(f'Selected alphas for ddim sampler: a_t: {alphas}; a_(t-1): {alphas_prev}')
         print(f'For the chosen value of eta, which is {eta}, '
-              f'this results in the following sigma_t schedule for ddim sampler {sigmas}')
+            f'this results in the following sigma_t schedule for ddim sampler {sigmas}')
     return sigmas, alphas, alphas_prev
 
 
@@ -80,10 +80,10 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
     which defines the cumulative product of (1-beta) over time from t = [0,1].
     :param num_diffusion_timesteps: the number of betas to produce.
     :param alpha_bar: a lambda that takes an argument t from 0 to 1 and
-                      produces the cumulative product of (1-beta) up to that
-                      part of the diffusion process.
+                    produces the cumulative product of (1-beta) up to that
+                    part of the diffusion process.
     :param max_beta: the maximum beta to use; use values lower than 1 to
-                     prevent singularities.
+                    prevent singularities.
     """
     betas = []
     for i in range(num_diffusion_timesteps):
@@ -106,7 +106,7 @@ def checkpoint(func, inputs, params, flag):
     :param func: the function to evaluate.
     :param inputs: the argument sequence to pass to `func`.
     :param params: a sequence of parameters `func` depends on but does not
-                   explicitly take as arguments.
+                explicitly take as arguments.
     :param flag: if False, disable gradient checkpointing.
     """
     if flag:
@@ -152,7 +152,7 @@ def timestep_embedding(timesteps, dim, max_period=10000, repeat_only=False):
     """
     Create sinusoidal timestep embeddings.
     :param timesteps: a 1-D Tensor of N indices, one per batch element.
-                      These may be fractional.
+                    These may be fractional.
     :param dim: the dimension of the output.
     :param max_period: controls the minimum frequency of the embeddings.
     :return: an [N x dim] Tensor of positional embeddings.

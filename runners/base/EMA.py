@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-# exponential moving average (EMA) class for model parameters
+# exponential moving average (EMA)
 class EMA:
     def __init__(self, ema_decay):
         super().__init__()

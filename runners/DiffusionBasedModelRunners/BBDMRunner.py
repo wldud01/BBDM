@@ -6,28 +6,29 @@ from torch.utils.data import DataLoader
 from PIL import Image
 from Register import Registers
 from model.BrownianBridge.BrownianBridgeModel import BrownianBridgeModel
-#from model.BrownianBridge.LatentBrownianBridgeModel import LatentBrownianBridgeModel
+
 from runners.DiffusionBasedModelRunners.DiffusionBaseRunner import DiffusionBaseRunner
 from runners.utils import weights_init, get_optimizer, get_dataset, make_dir, get_image_grid, save_single_image
 from tqdm.autonotebook import tqdm
-#from torchsummary import summary
+
 
 # BBDMRunner: Brownian Bridge Diffusion Model Runner
 @Registers.runners.register_with_name('BBDMRunner')
 class BBDMRunner(DiffusionBaseRunner):
     def __init__(self, config):
         super().__init__(config)
-
+    
+    # Initialize the model based on the configuration
     def initialize_model(self, config):
         if config.model.model_type == "BBDM":
             bbdmnet = BrownianBridgeModel(config.model).to(config.training.device[0])
-        #elif config.model.model_type == "LBBDM":
-        #    bbdmnet = LatentBrownianBridgeModel(config.model).to(config.training.device[0])
         else:
             raise NotImplementedError
+        
         bbdmnet.apply(weights_init)
         return bbdmnet
-
+    
+    # Load the model from a checkpoint
     def load_model_from_checkpoint(self):
         states = None
         if self.config.model.only_load_latent_mean_std:
@@ -46,6 +47,7 @@ class BBDMRunner(DiffusionBaseRunner):
                 if self.config.args.train:
                     self.get_latent_mean_std()
 
+    # Print the model summary including the number of parameters
     def print_model_summary(self, net):
         def get_parameter_number(model):
             total_num = sum(p.numel() for p in model.parameters())
@@ -56,13 +58,14 @@ class BBDMRunner(DiffusionBaseRunner):
         self.logger("Total Number of parameter: %.2fM" % (total_num / 1e6))
         self.logger("Trainable Number of parameter: %.2fM" % (trainable_num / 1e6))
 
+    # Initialize optimizers
     def initialize_optimizer_scheduler(self, net, config):
         optimizer = get_optimizer(config.model.BB.optimizer, net.get_parameters())
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
-                                                               mode='min',
-                                                               #verbose=True,
-                                                               threshold_mode='rel',
-                                                               **vars(config.model.BB.lr_scheduler)
+                                                                mode='min',
+                                                                #verbose=True,
+                                                                threshold_mode='rel',
+                                                                **vars(config.model.BB.lr_scheduler)
 )
         return [optimizer], [scheduler]
 
@@ -72,7 +75,7 @@ class BBDMRunner(DiffusionBaseRunner):
 
         return model_states, optimizer_scheduler_states
 
-
+    # Loss function for the model
     def loss_fn(self, net, batch, epoch, step, opt_idx=0, stage='train', write=True):
         (x, x_name), (x_cond, x_cond_name) = batch
         x = x.to(self.config.training.device[0])
@@ -87,6 +90,7 @@ class BBDMRunner(DiffusionBaseRunner):
                 self.writer.add_scalar(f'recloss_xy/{stage}', additional_info['recloss_xy'], step)
         return loss
 
+    # Sample images from the model
     @torch.no_grad()
     def sample(self, net, batch, sample_path, stage='train'):
         sample_path = make_dir(os.path.join(sample_path, f'{stage}_sample'))
@@ -133,6 +137,7 @@ class BBDMRunner(DiffusionBaseRunner):
         if stage != 'test':
             self.writer.add_image(f'{stage}_ground_truth', image_grid, self.global_step, dataformats='HWC')
 
+    # Sample images for evaluation
     @torch.no_grad()
     def sample_to_eval(self, net, test_loader, sample_path):
         condition_path = make_dir(os.path.join(sample_path, f'condition'))

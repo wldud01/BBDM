@@ -508,7 +508,7 @@ class AttentionLayers(nn.Module):
 
             if layer_type == 'a':
                 out, inter = block(x, mask=mask, sinusoidal_emb=self.pia_pos_emb, rel_pos=self.rel_pos,
-                                   prev_attn=prev_attn, mem=layer_mem)
+                                prev_attn=prev_attn, mem=layer_mem)
             elif layer_type == 'c':
                 out, inter = block(x, context=context, mask=mask, context_mask=context_mask, prev_attn=prev_cross_attn)
             elif layer_type == 'f':

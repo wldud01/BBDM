@@ -8,17 +8,18 @@ from Register import Registers
 #from datasets.custom import CustomSingleDataset, CustomAlignedDataset, CustomInpaintingDataset
 from datasets.custom import CustomCTTranslationDataset
 
-
+# remove_file: Remove a file if it exists
 def remove_file(fpath):
     if os.path.exists(fpath):
         os.remove(fpath)
 
-
+# make_dir: Create a directory if it does not exist
 def make_dir(dir):
     os.makedirs(dir, exist_ok=True)
     return dir
 
 
+# make_save_dirs: Create a set of directories for saving results, images, logs, checkpoints, and samples
 def make_save_dirs(args, prefix, suffix=None, with_time=False):
     time_str = datetime.now().strftime("%Y-%m-%dT%H-%M-%S") if with_time else ""
     suffix = suffix if suffix is not None else ""
@@ -32,7 +33,7 @@ def make_save_dirs(args, prefix, suffix=None, with_time=False):
     # print("create output path " + result_path)
     return result_path, image_path, checkpoint_path, log_path, sample_path, sample_to_eval_path
 
-
+# weights_init: Initialize weights for various layers in a neural network
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv2d') != -1:
@@ -45,7 +46,7 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
-
+# get_optimizer: Return an optimizer based on the configuration
 def get_optimizer(optim_config, parameters):
     if optim_config.optimizer == 'Adam':
         return torch.optim.Adam(parameters, lr=optim_config.lr, weight_decay=optim_config.weight_decay,
@@ -57,14 +58,14 @@ def get_optimizer(optim_config, parameters):
     else:
         return NotImplementedError('Optimizer {} not understood.'.format(optim_config.optimizer))
 
-
+# get_dataset: Load datasets based on the configuration
 def get_dataset(data_config):
     train_dataset = Registers.datasets[data_config.dataset_type](data_config.dataset_config, stage='train')
     val_dataset = Registers.datasets[data_config.dataset_type](data_config.dataset_config, stage='val')
     test_dataset = Registers.datasets[data_config.dataset_type](data_config.dataset_config, stage='test')
     return train_dataset, val_dataset, test_dataset
 
-
+# save_single_image: Save a single image to a specified path
 @torch.no_grad()
 def save_single_image(image, save_path, file_name, to_normal=True):
     image = image.detach().clone()
@@ -74,7 +75,7 @@ def save_single_image(image, save_path, file_name, to_normal=True):
     im = Image.fromarray(image)
     im.save(os.path.join(save_path, file_name))
 
-
+# get_image_grid: Create a grid of images from a batch of images
 @torch.no_grad()
 def get_image_grid(batch, grid_size=4, to_normal=True):
     batch = batch.detach().clone()

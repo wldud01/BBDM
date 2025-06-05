@@ -96,7 +96,7 @@ class Upsample(nn.Module):
     :param channels: channels in the inputs and outputs.
     :param use_conv: a bool determining if a convolution is applied.
     :param dims: determines if the signal is 1D, 2D, or 3D. If 3D, then
-                 upsampling occurs in the inner-two dimensions.
+                upsampling occurs in the inner-two dimensions.
     """
 
     def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1):
@@ -140,7 +140,7 @@ class Downsample(nn.Module):
     :param channels: channels in the inputs and outputs.
     :param use_conv: a bool determining if a convolution is applied.
     :param dims: determines if the signal is 1D, 2D, or 3D. If 3D, then
-                 downsampling occurs in the inner-two dimensions.
+                downsampling occurs in the inner-two dimensions.
     """
 
     def __init__(self, channels, use_conv, dims=2, out_channels=None,padding=1):
@@ -434,9 +434,9 @@ class UNetModel(nn.Module):
     :param use_checkpoint: use gradient checkpointing to reduce memory usage.
     :param num_heads: the number of attention heads in each attention layer.
     :param num_heads_channels: if specified, ignore num_heads and instead use
-                               a fixed channel width per attention head.
+                            a fixed channel width per attention head.
     :param num_heads_upsample: works with num_heads to set a different number
-                               of heads for upsampling. Deprecated.
+                            of heads for upsampling. Deprecated.
     :param use_scale_shift_norm: use a FiLM-like conditioning mechanism.
     :param resblock_updown: use residual blocks for up/downsampling.
     :param use_new_attention_order: use a different attention pattern for potentially
@@ -508,6 +508,7 @@ class UNetModel(nn.Module):
         self.predict_codebook_ids = n_embed is not None
         self.condition_key = condition_key
 
+        # timestep embedding
         time_embed_dim = model_channels * 4
         self.time_embed = nn.Sequential(
             linear(model_channels, time_embed_dim),
@@ -515,9 +516,11 @@ class UNetModel(nn.Module):
             linear(time_embed_dim, time_embed_dim),
         )
 
+        # if num_classes is specified, add a label embedding
         if self.num_classes is not None:
             self.label_emb = nn.Embedding(num_classes, time_embed_dim)
 
+        # input block
         self.input_blocks = nn.ModuleList(
             [
                 TimestepEmbedSequential(
@@ -529,6 +532,8 @@ class UNetModel(nn.Module):
         input_block_chans = [model_channels]
         ch = model_channels
         ds = 1
+        
+        # Upsampling blocks
         for level, mult in enumerate(channel_mult):
             for _ in range(num_res_blocks):
                 layers = [
@@ -599,6 +604,8 @@ class UNetModel(nn.Module):
         if legacy:
             #num_heads = 1
             dim_head = ch // num_heads if use_spatial_transformer else num_head_channels
+            
+        # bottleneck block
         self.middle_block = TimestepEmbedSequential(
             ResBlock(
                 ch,
@@ -628,6 +635,7 @@ class UNetModel(nn.Module):
         )
         self._feature_size += ch
 
+        # Upsampling blocks
         self.output_blocks = nn.ModuleList([])
         for level, mult in list(enumerate(channel_mult))[::-1]:
             for i in range(num_res_blocks + 1):
@@ -717,6 +725,8 @@ class UNetModel(nn.Module):
         self.input_blocks.apply(convert_module_to_f32)
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
+        
+        
 
     def forward(self, x, timesteps=None, context=None, y=None,**kwargs):
         """
@@ -742,15 +752,18 @@ class UNetModel(nn.Module):
             x = th.cat([x, context], dim=1)
 
         h = x.type(self.dtype)
+        # Downsampling
         for module in self.input_blocks:
             h = module(h, emb, context)
             hs.append(h)
+        # Bottleneck
         h = self.middle_block(h, emb, context)
-
+        # Upsampling
         for module in self.output_blocks:
             hspop = hs.pop()
             h = th.cat([h, hspop], dim=1)
             h = module(h, emb, context)
+            
         h = h.type(x.dtype)
 
         if self.predict_codebook_ids:

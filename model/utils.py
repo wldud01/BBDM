@@ -6,9 +6,6 @@ def extract(a, t, x_shape):
     a: [N] 형태의 배열 (예: betas, alphas 등)
     t: [B] 형태의 timestep index tensor
     x_shape: 결과 텐서의 shape 기준 (e.g., [B, C, H, W])
-    
-    -> 각 배치마다 timestep에 해당하는 값 a[t]를 추출하고,
-       broadcasting을 위해 [B, 1, 1, 1] 등으로 reshape
     """
     b, *_ = t.shape
     out = a.gather(-1, t)   # 각 배치별 timestep 위치에서 값 추출

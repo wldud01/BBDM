@@ -332,10 +332,12 @@ class BaseRunner(ABC):
         :return:
         """
         pass
-
+    
+    # main training function
     def train(self):
         self.logger(self.__class__.__name__)
 
+        # set up dataset and dataloader
         train_dataset, val_dataset, test_dataset = get_dataset(self.config.data)
         train_sampler = None
         val_sampler = None
@@ -382,12 +384,14 @@ class BaseRunner(ABC):
         start_epoch = self.global_epoch
         self.logger(f"start training {self.config.model.model_name} on {self.config.data.dataset_name}, {len(train_loader)} iters per epoch")
 
+        # start training
         try:
             accumulate_grad_batches = self.config.training.accumulate_grad_batches
             for epoch in range(start_epoch, self.config.training.n_epochs):
                 if self.global_step > self.config.training.n_steps:
                     break
-
+                
+                # set epoch for distributed training
                 if self.config.training.use_DDP:
                     train_sampler.set_epoch(epoch)
                     val_sampler.set_epoch(epoch)
@@ -395,6 +399,8 @@ class BaseRunner(ABC):
                 pbar = tqdm(train_loader, total=len(train_loader), smoothing=0.01, disable= False) # disable=not self.is_main_process
                 self.global_epoch = epoch
                 start_time = time.time()
+                
+                # training loop
                 for train_batch in pbar:
                     self.global_step += 1
                     self.net.train()
@@ -415,6 +421,8 @@ class BaseRunner(ABC):
                             self.optimizer[i].zero_grad()
                             if self.scheduler is not None:
                                 self.scheduler[i].step(loss)
+                        
+                        # reduce loss across all processes if using DDP
                         if self.config.training.use_DDP:
                             dist.reduce(loss, dst=0, op=dist.ReduceOp.SUM)
                         losses.append(loss.detach().mean())
@@ -422,6 +430,7 @@ class BaseRunner(ABC):
                     if self.use_ema and self.global_step % (self.update_ema_interval*accumulate_grad_batches) == 0:
                         self.step_ema()
 
+                    # write loss
                     if len(self.optimizer) > 1:
                         pbar.set_description(
                             (
@@ -553,8 +562,11 @@ class BaseRunner(ABC):
             traceback.print_exc()
             print('traceback.format_exc():\n%s' % traceback.format_exc())
 
+    # test function
     @torch.no_grad()
     def test(self):
+        
+        # set up dataset and dataloader
         train_dataset, val_dataset, test_dataset = get_dataset(self.config.data)
         if test_dataset is None:
             test_dataset = val_dataset
@@ -580,15 +592,18 @@ class BaseRunner(ABC):
         self.net.eval()
         if self.config.args.sample_to_eval:
             sample_path = self.config.result.sample_to_eval_path
+            
             if self.config.training.use_DDP:
                 self.sample_to_eval(self.net.module, test_loader, sample_path)
             else:
                 self.sample_to_eval(self.net, test_loader, sample_path)
         else:
+            # sample a single batch
             test_iter = iter(test_loader)
             for i in tqdm(range(1), initial=0, dynamic_ncols=True, smoothing=0.01):
                 test_batch = next(test_iter)
                 sample_path = os.path.join(self.config.result.sample_path, str(i))
+                
                 if self.config.training.use_DDP:
                     self.sample(self.net.module, test_batch, sample_path, stage='test')
                 else:

@@ -117,11 +117,10 @@ class BrownianBridgeModel(nn.Module):
         - context: UNet의 ondition input으로 주입하는 정보 (cross-attention 등)
         """
 
-        # 조건 없이 학습할 경우 context 제거
+        # 조건 없이 학습할 경우 context 제거, 명시되지 않으면 기본적으로 y를 조건으로 사용
         if self.condition_key == "nocond":
             context = None
         else:
-            # context가 명시되지 않으면 기본적으로 y를 조건으로 사용
             context = y if context is None else context
 
         # batch 크기, 채널, 높이, 너비, device 정보 추출
@@ -181,9 +180,7 @@ class BrownianBridgeModel(nn.Module):
     def q_sample(self, x0, y, t, noise=None):
         """
         Forward diffusion: x₀ → xₜ
-
-        BBDM의 공식에 따라 x₀에서 y로 이동하는 중간 상태 xₜ를 샘플링
-
+        
         Args:
             x0 (Tensor): 복원 대상 이미지 (target)
             y (Tensor): source 이미지 (bridge의 종점)
@@ -221,7 +218,6 @@ class BrownianBridgeModel(nn.Module):
     def predict_x0_from_objective(self, x_t, y, t, objective_recon):
         """
         예측된 objective를 사용하여 x₀ 복원
-        (즉, 역방향 샘플링에서 초기 상태 x₀를 추정)
 
         Args:
             x_t (Tensor): 현재 시점의 중간 상태 (경로 위의 점)
