@@ -6,14 +6,14 @@ from pathlib import Path
 # 이미지 변환 및 전처리 관련
 class ImagePathDataset(Dataset):
     def __init__(self, image_paths, image_size=(256, 256), flip=False, to_normal=False):
-        self.image_size = image_size    # 이미지 크기
-        self.image_paths = image_paths  # 이미지 경로
-        self._length = len(image_paths) # 
-        self.flip = flip    # 데이터 증강 여부
-        self.to_normal = to_normal  # -1~1로 정규화 여부
+        self.image_size = image_size    
+        self.image_paths = image_paths  
+        self._length = len(image_paths) 
+        self.flip = flip    
+        self.to_normal = to_normal  
 
     def __len__(self):
-        if self.flip:   # 증강하는 경우, 이미지 수를 2배로 간주하여 augmentaton 적용
+        if self.flip:   
             return self._length * 2
         return self._length
 
@@ -26,8 +26,8 @@ class ImagePathDataset(Dataset):
 
         # 이미지 전처리
         transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(p=p),   #  좌우 반전
-            transforms.Resize(self.image_size), # 이미지 크기 조정
+            transforms.RandomHorizontalFlip(p=p),   
+            transforms.Resize(self.image_size), 
             transforms.ToTensor()
         ])
 

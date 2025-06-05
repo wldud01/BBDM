@@ -12,7 +12,7 @@ from runners.utils import weights_init, get_optimizer, get_dataset, make_dir, ge
 from tqdm.autonotebook import tqdm
 #from torchsummary import summary
 
-
+# BBDMRunner: Brownian Bridge Diffusion Model Runner
 @Registers.runners.register_with_name('BBDMRunner')
 class BBDMRunner(DiffusionBaseRunner):
     def __init__(self, config):

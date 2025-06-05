@@ -5,7 +5,7 @@ from tqdm.autonotebook import tqdm
 from runners.BaseRunner import BaseRunner
 from runners.utils import get_image_grid
 
-
+# DiffusionBaseRunner: Base class for diffusion-based model runners
 class DiffusionBaseRunner(BaseRunner, ABC):
     def __init__(self, config):
         super().__init__(config)

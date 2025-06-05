@@ -2,7 +2,7 @@ import logging
 import importlib
 import os
 
-# 데이터셋 종류, runner 종류 등 등록 기능 제공공
+# 데이터셋 종류, runner 종류 등 등록 기능 제공
 class Register:
     def __init__(self, registry_name):
         self.dict = {}

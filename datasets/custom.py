@@ -5,7 +5,7 @@ from Register import Registers
 from datasets.utils import get_image_paths_from_dir
 from datasets.base import ImagePathDataset
 
-
+# Task에 맞게 데이터 구성
 @Registers.datasets.register_with_name('custom_ct_translation')
 class CustomCTTranslationDataset(Dataset):
     """

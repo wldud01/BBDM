@@ -13,7 +13,7 @@ testing:  # 평가 관련 설정
   clip_denoised: True # denoising된 이미지가 -1 ~ 1 사이로 clip할지 여부
   sample_num: 5 # 샘플링 시 생성할 이미지 개수
 
-data: # 데이터 관련 설정정
+data: # 데이터 관련 설정
   dataset_name: 'custom_ct_translation' # 'dataset_name'
   dataset_type: 'custom_ct_translation' # Register에 등록된 데이터셋 클래스 이름
   dataset_config:

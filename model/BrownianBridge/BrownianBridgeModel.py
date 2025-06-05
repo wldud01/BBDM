@@ -18,20 +18,20 @@ class BrownianBridgeModel(nn.Module):
         self.model_config = model_config
 
         # 모델 하이퍼파라미터 초기화 및 schedule 설정
-        model_params = model_config.BB.params  # BBDM 관련 설정 파라미터 로드
-        self.num_timesteps = model_params.num_timesteps  # diffusion의 전체 timestep 수
-        self.mt_type = model_params.mt_type  # m_t 타입 (선형 or 사인 형태)
-        self.max_var = model_params.max_var if model_params.__contains__("max_var") else 1  # 분산 최대값 (기본값: 1)
-        self.eta = model_params.eta if model_params.__contains__("eta") else 1  # reverse 과정에서 noise scale
-        self.skip_sample = model_params.skip_sample  # sampling 시 timestep 스킵 여부
-        self.sample_type = model_params.sample_type  # 샘플링 스케줄 방식 ('linear' 또는 'cosine')
-        self.sample_step = model_params.sample_step  # 샘플링 시 사용할 step 수
-        self.steps = None  # 샘플링에서 사용할 step 리스트 (나중에 schedule로 등록)
-        self.register_schedule()  # forward/reverse 과정에 사용할 schedule 파라미터 등록
+        model_params = model_config.BB.params  
+        self.num_timesteps = model_params.num_timesteps  
+        self.mt_type = model_params.mt_type 
+        self.max_var = model_params.max_var if model_params.__contains__("max_var") else 1  
+        self.eta = model_params.eta if model_params.__contains__("eta") else 1  
+        self.skip_sample = model_params.skip_sample  #
+        self.sample_type = model_params.sample_type  
+        self.sample_step = model_params.sample_step  
+        self.steps = None 
+        self.register_schedule()  
 
         # 학습 설정 (loss function 및 objective type 등)
-        self.loss_type = model_params.loss_type  # 손실 함수 종류 ('l1', 'l2')
-        self.objective = model_params.objective  # 예측 대상 ('grad', 'noise', 'ysubx')
+        self.loss_type = model_params.loss_type  
+        self.objective = model_params.objective  
 
         # UNet 기반의 denoising function 정의
         self.image_size = model_params.UNetParams.image_size  # 입력 이미지 크기
@@ -66,10 +66,12 @@ class BrownianBridgeModel(nn.Module):
         m_tminus = np.append(0, m_t[:-1])
 
         # variance 계산 (Brownian Bridge 이론 기반)
-        variance_t = 2. * (m_t - m_t ** 2) * self.max_var   # 각 시점의 분산
-        variance_tminus = np.append(0., variance_t[:-1])    # t-1 시점 분산
+        variance_t = 2. * (m_t - m_t ** 2) * self.max_var   
+        variance_tminus = np.append(0., variance_t[:-1])    
+        
         # t 와 t-1 간의 분산 차이 (Bridge 기반 조정)
         variance_t_tminus = variance_t - variance_tminus * ((1. - m_t) / (1. - m_tminus)) ** 2
+
         # reverse step에서 사용하는 값
         posterior_variance_t = variance_t_tminus * variance_tminus / variance_t
 
@@ -180,8 +182,7 @@ class BrownianBridgeModel(nn.Module):
         """
         Forward diffusion: x₀ → xₜ
 
-        BBDM의 공식에 따라 x₀에서 y로 이동하는 중간 상태 xₜ를 샘플링합니다.
-        동시에, 학습에서 사용할 objective(예측 대상)를 계산합니다.
+        BBDM의 공식에 따라 x₀에서 y로 이동하는 중간 상태 xₜ를 샘플링
 
         Args:
             x0 (Tensor): 복원 대상 이미지 (target)
@@ -202,11 +203,11 @@ class BrownianBridgeModel(nn.Module):
         sigma_t = torch.sqrt(var_t)
 
         # objective 종류
-        if self.objective == 'grad':    #  방향 정보 포함: BBDM 특화된 gradient 형태
+        if self.objective == 'grad':   
             objective = m_t * (y - x0) + sigma_t * noise
-        elif self.objective == 'noise':   # DDPM과 유사하게 pure noise 예측
+        elif self.objective == 'noise':   
             objective = noise
-        elif self.objective == 'ysubx':   # 단순한 도메인 차이 예측 (e.g., y - x)
+        elif self.objective == 'ysubx':  
             objective = y - x0
         else:
             raise NotImplementedError()

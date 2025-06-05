@@ -21,7 +21,7 @@ from tqdm.autonotebook import tqdm
 from runners.base.EMA import EMA
 from runners.utils import make_save_dirs, make_dir, get_dataset, remove_file
 
-
+# BaseRunner is an abstract class that defines the structure for training and testing neural networks.
 class BaseRunner(ABC):
     def __init__(self, config):
         self.net = None  # Neural Network
