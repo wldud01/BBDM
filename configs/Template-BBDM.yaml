@@ -17,7 +17,7 @@ data: # 데이터 관련 설정
   dataset_name: 'custom_ct_translation' # 'dataset_name'
   dataset_type: 'custom_ct_translation' # Register에 등록된 데이터셋 클래스 이름
   dataset_config:
-    dataset_path: '/mnt/c/Users/young/BBDM_input_split'  # train/val/test 데이터셋이 저장된 경로
+    dataset_path: '/mnt/c/Users/young/datases/BBDM_input_split'  # train/val/test 데이터셋이 저장된 경로
     image_size: 512 # default 256, 이미지 크기
     channels: 1 # default 3, 이미지 channels 수
     to_normal: True # -1 ~ 1로 정규화할지 여부
