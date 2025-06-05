@@ -1,6 +1,6 @@
 !!python/object:argparse.Namespace
 args: !!python/object:argparse.Namespace
-  config: configs/Template-BBDM.yaml
+  config: /home/young/2024_wsl/BBDM-main/configs/Template-BBDM.yaml
   gpu_ids: '-1'
   max_epoch: null
   max_steps: null
@@ -8,11 +8,11 @@ args: !!python/object:argparse.Namespace
   result_path: results
   resume_model: null
   resume_optim: null
-  sample_at_start: true
+  sample_at_start: false
   sample_to_eval: false
-  save_top: true
+  save_top: false
   seed: 1234
-  train: true
+  train: false
 data: !!python/object:argparse.Namespace
   dataset_config: !!python/object:argparse.Namespace
     channels: 1

@@ -3,7 +3,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 from pathlib import Path
 
-# 이미지 변환 및 전처리 관련련
+# 이미지 변환 및 전처리 관련
 class ImagePathDataset(Dataset):
     def __init__(self, image_paths, image_size=(256, 256), flip=False, to_normal=False):
         self.image_size = image_size    # 이미지 크기
@@ -24,10 +24,10 @@ class ImagePathDataset(Dataset):
             index = index - self._length
             p = 1.0
 
-        # 이미지 전처리리
+        # 이미지 전처리
         transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(p=p),
-            transforms.Resize(self.image_size),
+            transforms.RandomHorizontalFlip(p=p),   #  좌우 반전
+            transforms.Resize(self.image_size), # 이미지 크기 조정
             transforms.ToTensor()
         ])
 
@@ -51,4 +51,6 @@ class ImagePathDataset(Dataset):
             image.clamp_(-1., 1.)
 
         image_name = Path(img_path).stem
+
+        
         return image, image_name

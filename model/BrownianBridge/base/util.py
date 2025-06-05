@@ -15,8 +15,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def log_txt_as_img(wh, xc, size=10):
-    # wh a tuple of (width, height)
-    # xc a list of captions to plot
+    """
+    텍스트 목록을 이미지로 변환하여 시각화용 텐서로 반환
+    Args:
+        wh (tuple): 이미지 크기 (width, height)
+        xc (list[str]): 각 배치 항목의 텍스트
+    Returns:
+        torch.Tensor: [-1, 1] 범위로 정규화된 이미지 텐서
+    """
     b = len(xc)
     txts = list()
     for bi in range(b):
@@ -63,12 +69,15 @@ def default(val, d):
 def mean_flat(tensor):
     """
     https://github.com/openai/guided-diffusion/blob/27c20a8fab9cb472df5d6bdd6c8d11c8f430b924/guided_diffusion/nn.py#L86
-    Take the mean over all non-batch dimensions.
+    배치 차원을 제외한 모든 차원에 대해 평균 계산
     """
     return tensor.mean(dim=list(range(1, len(tensor.shape))))
 
 
 def count_params(model, verbose=False):
+    """
+    모델의 총 파라미터 수 계산
+    """
     total_params = sum(p.numel() for p in model.parameters())
     if verbose:
         print(f"{model.__class__.__name__} has {total_params * 1.e-6:.2f} M params.")
@@ -76,6 +85,9 @@ def count_params(model, verbose=False):
 
 
 def instantiate_from_config(config):
+    """
+    config dict를 기반으로 클래스 인스턴스 생성
+    """
     if not "target" in config:
         if config == '__is_first_stage__':
             return None
@@ -86,6 +98,9 @@ def instantiate_from_config(config):
 
 
 def get_obj_from_str(string, reload=False):
+    """
+    문자열로부터 클래스 객체 불러오기 ("module.ClassName" 형태)
+    """
     module, cls = string.rsplit(".", 1)
     if reload:
         module_imp = importlib.import_module(module)
@@ -94,8 +109,9 @@ def get_obj_from_str(string, reload=False):
 
 
 def _do_parallel_data_prefetch(func, Q, data, idx, idx_to_fn=False):
-    # create dummy dataset instance
-
+    """
+    각 프로세스/스레드에서 실행할 작업 함수
+    """
     # run prefetching
     if idx_to_fn:
         res = func(data, worker_id=idx)
@@ -108,6 +124,19 @@ def _do_parallel_data_prefetch(func, Q, data, idx, idx_to_fn=False):
 def parallel_data_prefetch(
         func: callable, data, n_proc, target_data_type="ndarray", cpu_intensive=True, use_worker_id=False
 ):
+    """
+    데이터셋을 병렬로 전처리하는 함수
+    
+    Args:
+        func: 전처리 함수
+        data: 입력 데이터 리스트 또는 ndarray
+        n_proc: 병렬 프로세스 수
+        target_data_type: 출력 형태 ('list' or 'ndarray')
+        cpu_intensive: 멀티프로세싱(True) or 멀티스레딩(False)
+        use_worker_id: 각 worker ID 전달 여부
+    Returns:
+        전처리된 전체 데이터 (list or ndarray)
+    """
     # if target_data_type not in ["ndarray", "list"]:
     #     raise ValueError(
     #         "Data, which is passed to parallel_data_prefetch has to be either of type list or ndarray."
@@ -135,7 +164,8 @@ def parallel_data_prefetch(
     else:
         Q = Queue(1000)
         proc = Thread
-    # spawn processes
+
+    # 데이터 분할 및 인자 구성
     if target_data_type == "ndarray":
         arguments = [
             [func, Q, part, i, use_worker_id]
@@ -153,13 +183,14 @@ def parallel_data_prefetch(
                 [data[i: i + step] for i in range(0, len(data), step)]
             )
         ]
+
+    # 프로세스/스레드 실행
     processes = []
     for i in range(n_proc):
         p = proc(target=_do_parallel_data_prefetch, args=arguments[i])
         processes += [p]
-
-    # start processes
     print(f"Start prefetching...")
+    
     import time
 
     start = time.time()
