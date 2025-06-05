@@ -63,7 +63,8 @@ def convert_to_bbdm_structure_with_split(src_root, dst_root, val_ratio=0.1, test
 # 실행 예시
 if __name__ == "__main__":
     # 데이터가 저장된 위치
-    src_root = "/mnt/c/Users/0106y/PSHC/Bucheon_CMC_DR/Chest"
+    src_root = "/mnt/c/Users/young/Bucheon_CMC_DR/Chest"
     # 새롭게 데이터를 저장할 위치
-    dst_root = "/mnt/c/Users/0106y/PSHC/BBDM_input_split"
+    
+    dst_root = "/mnt/c/Users/young/BBDM_input_split"
     convert_to_bbdm_structure_with_split(src_root, dst_root)

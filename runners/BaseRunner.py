@@ -16,8 +16,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from abc import ABC, abstractmethod
 from tqdm.autonotebook import tqdm
 
-# from evaluation.FID import calc_FID
-# from evaluation.LPIPS import calc_LPIPS
 from runners.base.EMA import EMA
 from runners.utils import make_save_dirs, make_dir, get_dataset, remove_file
 
@@ -98,8 +96,8 @@ class BaseRunner(ABC):
         :param config: config
         :param is_test: is_test
         :return: net: Neural Network, nn.Module;
-                 optimizer: a list of optimizers;
-                 scheduler: a list of schedulers or None;
+                optimizer: a list of optimizers;
+                scheduler: a list of schedulers or None;
         """
         net = self.initialize_model(config)
         optimizer, scheduler = None, None
@@ -349,36 +347,36 @@ class BaseRunner(ABC):
             val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
             test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset)
             train_loader = DataLoader(train_dataset,
-                                      batch_size=self.config.data.train.batch_size,
-                                      num_workers=0,
-                                      drop_last=True,
-                                      sampler=train_sampler)
+                                    batch_size=self.config.data.train.batch_size,
+                                    num_workers=0,
+                                    drop_last=True,
+                                    sampler=train_sampler)
             val_loader = DataLoader(val_dataset,
                                     batch_size=self.config.data.val.batch_size,
                                     num_workers=0,
                                     drop_last=True,
                                     sampler=val_sampler)
             test_loader = DataLoader(test_dataset,
-                                     batch_size=self.config.data.test.batch_size,
-                                     num_workers=0,
-                                     drop_last=True,
-                                     sampler=test_sampler)
+                                    batch_size=self.config.data.test.batch_size,
+                                    num_workers=0,
+                                    drop_last=True,
+                                    sampler=test_sampler)
         else:   # 단일 GPU 처리
             train_loader = DataLoader(train_dataset,
-                                      batch_size=self.config.data.train.batch_size,
-                                      shuffle=self.config.data.train.shuffle,
-                                      num_workers=0,
-                                      drop_last=True)
+                                    batch_size=self.config.data.train.batch_size,
+                                    shuffle=self.config.data.train.shuffle,
+                                    num_workers=0,
+                                    drop_last=True)
             val_loader = DataLoader(val_dataset,
                                     batch_size=self.config.data.val.batch_size,
                                     shuffle=self.config.data.val.shuffle,
                                     num_workers=0,
                                     drop_last=True)
             test_loader = DataLoader(test_dataset,
-                                     batch_size=self.config.data.test.batch_size,
-                                     shuffle=False,
-                                     num_workers=8,
-                                     drop_last=True)
+                                    batch_size=self.config.data.test.batch_size,
+                                    shuffle=False,
+                                    num_workers=8,
+                                    drop_last=True)
 
         epoch_length = len(train_loader)
         start_epoch = self.global_epoch
@@ -485,16 +483,16 @@ class BaseRunner(ABC):
                                     os.path.join(self.config.result.ckpt_path, f'latest_optim_sche_{temp}.pth'))
                                 temp += 1
                             torch.save(model_states,
-                                       os.path.join(self.config.result.ckpt_path,
+                                    os.path.join(self.config.result.ckpt_path,
                                                     f'latest_model_{epoch + 1}.pth'))
                             torch.save(optimizer_scheduler_states,
-                                       os.path.join(self.config.result.ckpt_path,
+                                    os.path.join(self.config.result.ckpt_path,
                                                     f'latest_optim_sche_{epoch + 1}.pth'))
                             torch.save(model_states,
-                                       os.path.join(self.config.result.ckpt_path,
+                                    os.path.join(self.config.result.ckpt_path,
                                                     f'last_model.pth'))
                             torch.save(optimizer_scheduler_states,
-                                       os.path.join(self.config.result.ckpt_path,
+                                    os.path.join(self.config.result.ckpt_path,
                                                     f'last_optim_sche.pth'))
 
                             # save top_k checkpoints
@@ -507,33 +505,33 @@ class BaseRunner(ABC):
                                 if top_key not in self.topk_checkpoints:
                                     print('top key not in topk_checkpoints')
                                     self.topk_checkpoints[top_key] = {"loss": average_loss,
-                                                                      'model_ckpt_name': model_ckpt_name,
-                                                                      'optim_sche_ckpt_name': optim_sche_ckpt_name}
+                                                                    'model_ckpt_name': model_ckpt_name,
+                                                                    'optim_sche_ckpt_name': optim_sche_ckpt_name}
 
                                     print(f"saving top checkpoint: average_loss={average_loss} epoch={epoch + 1}")
                                     torch.save(model_states,
-                                               os.path.join(self.config.result.ckpt_path, model_ckpt_name))
+                                            os.path.join(self.config.result.ckpt_path, model_ckpt_name))
                                     torch.save(optimizer_scheduler_states,
-                                               os.path.join(self.config.result.ckpt_path, optim_sche_ckpt_name))
+                                            os.path.join(self.config.result.ckpt_path, optim_sche_ckpt_name))
                                 else:
                                     if average_loss < self.topk_checkpoints[top_key]["loss"]:
                                         print("remove " + self.topk_checkpoints[top_key]["model_ckpt_name"])
                                         remove_file(os.path.join(self.config.result.ckpt_path,
-                                                                 self.topk_checkpoints[top_key]['model_ckpt_name']))
+                                                                self.topk_checkpoints[top_key]['model_ckpt_name']))
                                         remove_file(os.path.join(self.config.result.ckpt_path,
-                                                                 self.topk_checkpoints[top_key]['optim_sche_ckpt_name']))
+                                                                self.topk_checkpoints[top_key]['optim_sche_ckpt_name']))
 
                                         print(
                                             f"saving top checkpoint: average_loss={average_loss} epoch={epoch + 1}")
 
                                         self.topk_checkpoints[top_key] = {"loss": average_loss,
-                                                                          'model_ckpt_name': model_ckpt_name,
-                                                                          'optim_sche_ckpt_name': optim_sche_ckpt_name}
+                                                                        'model_ckpt_name': model_ckpt_name,
+                                                                        'optim_sche_ckpt_name': optim_sche_ckpt_name}
 
                                         torch.save(model_states,
-                                                   os.path.join(self.config.result.ckpt_path, model_ckpt_name))
+                                                os.path.join(self.config.result.ckpt_path, model_ckpt_name))
                                         torch.save(optimizer_scheduler_states,
-                                                   os.path.join(self.config.result.ckpt_path, optim_sche_ckpt_name))
+                                                os.path.join(self.config.result.ckpt_path, optim_sche_ckpt_name))
                 if self.config.training.use_DDP:
                     dist.barrier()
         except BaseException as e:
@@ -542,9 +540,9 @@ class BaseRunner(ABC):
                 print(self.__class__.__name__)
                 model_states, optimizer_scheduler_states = self.get_checkpoint_states(stage='exception')
                 torch.save(model_states,
-                           os.path.join(self.config.result.ckpt_path, f'last_model.pth'))
+                        os.path.join(self.config.result.ckpt_path, f'last_model.pth'))
                 torch.save(optimizer_scheduler_states,
-                           os.path.join(self.config.result.ckpt_path, f'last_optim_sche.pth'))
+                        os.path.join(self.config.result.ckpt_path, f'last_optim_sche.pth'))
 
                 print("exception save model success!")
 
@@ -564,17 +562,17 @@ class BaseRunner(ABC):
         if self.config.training.use_DDP:
             test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset)
             test_loader = DataLoader(test_dataset,
-                                     batch_size=self.config.data.test.batch_size,
-                                     shuffle=False,
-                                     num_workers=1,
-                                     drop_last=True,
-                                     sampler=test_sampler)
+                                    batch_size=self.config.data.test.batch_size,
+                                    shuffle=False,
+                                    num_workers=1,
+                                    drop_last=True,
+                                    sampler=test_sampler)
         else:
             test_loader = DataLoader(test_dataset,
-                                     batch_size=self.config.data.test.batch_size,
-                                     shuffle=False,
-                                     num_workers=1,
-                                     drop_last=True)
+                                    batch_size=self.config.data.test.batch_size,
+                                    shuffle=False,
+                                    num_workers=1,
+                                    drop_last=True)
 
         if self.use_ema:
             self.apply_ema()

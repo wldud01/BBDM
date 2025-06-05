@@ -18,7 +18,7 @@ def parse_args_and_config():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
 
     # 기본 인자
-    parser.add_argument('-c', '--config', type=str, default='/home/young/2024_wsl/BBDM-main/configs/Template-BBDM.yaml', help='Path to the config file')
+    parser.add_argument('-c', '--config', type=str, default='/home/young/2025/BBDM/configs/Template-BBDM.yaml', help='Path to the config file')
     parser.add_argument('-s', '--seed', type=int, default=1234, help='Random seed')
     parser.add_argument('-r', '--result_path', type=str, default='results', help="The directory to save results")
 

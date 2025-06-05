@@ -44,9 +44,9 @@ class BrownianBridgeModel(nn.Module):
     def register_schedule(self):
         """
         Forward diffusion 과정을 위한 m_t, variance 등의 스케줄 정의
-           - m_t: 시간에 따른 interpolation 계수 (x0과 y를 혼합하는 비율)
-           - variance: Brownian Bridge에서의 시점별 노이즈 분산
-           - posterior_variance: reverse 과정에서 사용할 분산
+        - m_t: 시간에 따른 interpolation 계수 (x0과 y를 혼합하는 비율)
+        - variance: Brownian Bridge에서의 시점별 노이즈 분산
+        - posterior_variance: reverse 과정에서 사용할 분산
         """
         # 총 timestep 수
         T = self.num_timesteps
@@ -112,9 +112,9 @@ class BrownianBridgeModel(nn.Module):
     def forward(self, x, y, context=None):
         """
         학습 시 호출되는 entry point 함수
-           - x: target 도메인 이미지 (예: CECT)
-           - y: source 도메인 이미지 (예: NECT)
-           - context: UNet의 ondition input으로 주입하는 정보 (cross-attention 등)
+        - x: target 도메인 이미지 (예: CECT)
+        - y: source 도메인 이미지 (예: NECT)
+        - context: UNet의 ondition input으로 주입하는 정보 (cross-attention 등)
         """
 
         # 조건 없이 학습할 경우 context 제거
@@ -151,7 +151,7 @@ class BrownianBridgeModel(nn.Module):
         """
 
         b, c, h, w = x0.shape
-         # 노이즈가 주어지지 않으면 표준 정규분포에서 생성
+        # 노이즈가 주어지지 않으면 표준 정규분포에서 생성
         noise = default(noise, lambda: torch.randn_like(x0))
 
         # Forward process: x₀를 노이즈화하여 xₜ 생성
@@ -249,7 +249,7 @@ class BrownianBridgeModel(nn.Module):
     def q_sample_loop(self, x0, y):
         """
         Forward 과정을 시각화용으로 step-by-step 수행
-           - x0 → x1 → ... → xT
+        - x0 → x1 → ... → xT
         """
         imgs = [x0]
         for i in tqdm(range(self.num_timesteps), desc='q sampling loop', total=self.num_timesteps):

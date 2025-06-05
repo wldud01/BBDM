@@ -2,7 +2,7 @@
 runner: "BBDMRunner"  # 학습/평가 로직 담당
 
 training: # 학습 관련 설정
-  n_epochs: 200   # 최대 학습 epoch 수
+  n_epochs: 1   # 최대 학습 epoch 수 200
   n_steps: 400000 # 최대 학습 step 수
   save_interval: 20 # 몇 epoch마다 모델을 저장할지
   sample_interval: 2  # 샘플링 저장 주기 (epoch 단위)
@@ -17,19 +17,19 @@ data: # 데이터 관련 설정
   dataset_name: 'custom_ct_translation' # 'dataset_name'
   dataset_type: 'custom_ct_translation' # Register에 등록된 데이터셋 클래스 이름
   dataset_config:
-    dataset_path: '/mnt/c/Users/0106y/PSHC/BBDM_input_split'  # train/val/test 데이터셋이 저장된 경로
-    image_size: 64 # default 256, 이미지 크기
+    dataset_path: '/mnt/c/Users/young/BBDM_input_split'  # train/val/test 데이터셋이 저장된 경로
+    image_size: 512 # default 256, 이미지 크기
     channels: 1 # default 3, 이미지 channels 수
     to_normal: True # -1 ~ 1로 정규화할지 여부
     flip: False # 수평 플립 여부 (Train 시 aumentation)
   train:  # 학습용 데이터셋 설정
-    batch_size: 2 # default 8
+    batch_size: 4 # default 8
     shuffle: True
   val:  # 검증용 데이터셋 설정
-    batch_size: 2
+    batch_size: 4
     shuffle: True
   test: # 평가용 데이터셋 설정
-    batch_size: 2
+    batch_size: 4
     # shuffle: False
 
 model:  # 모델 관련 설정
@@ -80,7 +80,7 @@ model:  # 모델 관련 설정
       max_var: 1.0 # maximum variance
 
       UNetParams: # UNet 관련 설정
-        image_size: 64  # 입력 이미지 크기 
+        image_size: 512  # 입력 이미지 크기 
         in_channels: 1   # source, default 6(RGB + RGB)
         model_channels: 128 # UNet의 기본 채널 수
         out_channels: 1   # target, default 3(RGB)

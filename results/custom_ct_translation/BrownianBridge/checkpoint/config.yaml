@@ -1,6 +1,6 @@
 !!python/object:argparse.Namespace
 args: !!python/object:argparse.Namespace
-  config: /home/young/2024_wsl/BBDM-main/configs/Template-BBDM.yaml
+  config: configs/Template-BBDM.yaml
   gpu_ids: '-1'
   max_epoch: null
   max_steps: null
@@ -8,27 +8,27 @@ args: !!python/object:argparse.Namespace
   result_path: results
   resume_model: null
   resume_optim: null
-  sample_at_start: false
+  sample_at_start: true
   sample_to_eval: false
-  save_top: false
+  save_top: true
   seed: 1234
-  train: false
+  train: true
 data: !!python/object:argparse.Namespace
   dataset_config: !!python/object:argparse.Namespace
     channels: 1
-    dataset_path: /mnt/c/Users/0106y/PSHC/BBDM_input_split
+    dataset_path: /mnt/c/Users/young/BBDM_input_split
     flip: false
-    image_size: 64
+    image_size: 512
     to_normal: true
   dataset_name: custom_ct_translation
   dataset_type: custom_ct_translation
   test: !!python/object:argparse.Namespace
-    batch_size: 2
+    batch_size: 4
   train: !!python/object:argparse.Namespace
-    batch_size: 2
+    batch_size: 4
     shuffle: true
   val: !!python/object:argparse.Namespace
-    batch_size: 2
+    batch_size: 4
     shuffle: true
 model: !!python/object:argparse.Namespace
   BB: !!python/object:argparse.Namespace
@@ -57,7 +57,7 @@ model: !!python/object:argparse.Namespace
         context_dim: null
         conv_resample: true
         dims: 2
-        image_size: 64
+        image_size: 512
         in_channels: 1
         model_channels: 128
         num_head_channels: 64
@@ -106,7 +106,7 @@ training: !!python/object:argparse.Namespace
   device:
   - !!python/object/apply:torch.device
     - cpu
-  n_epochs: 200
+  n_epochs: 1
   n_steps: 400000
   sample_interval: 2
   save_interval: 20
